@@ -65,14 +65,16 @@ local function processFile(dir, f, extension)
     end
 end
 
-local function searchDir(dir, basePath)
+local function searchDir(dir, basePath, excludedFiles)
     local files, dirs = file.Find(dir .. "/*", basePath)
     log("Processing", dir)
 
     for _, f in ipairs(files) do
         for extension, _ in pairs(allowedExtensions) do
             if f:match(".*%" .. extension) then
-                processFile(dir, f, extension)
+                if excludedFiles ~= nil and not table.HasValue(excludedFiles, f) then
+                    processFile(dir, f, extension)
+                end
                 break
             end
         end
@@ -83,10 +85,12 @@ local function searchDir(dir, basePath)
     end
 end
 
-function RLoader:Load(dir, basePath, _include)
+function RLoader:Load(dir, basePath, _include, excludedFiles)
+    excludedFiles = excludedFiles or nil
+
     log("Loading directory", dir)
     resetLoadTable()
-    searchDir(dir, basePath)
+    searchDir(dir, basePath, excludedFiles)
 
     for k, v in ipairs(files.sh) do
         AddCSLuaFile(v)
