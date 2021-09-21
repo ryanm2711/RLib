@@ -8,7 +8,7 @@ Usage: Can be used to load lua files or resources. Automatically loads sub-folde
 
 To load a folder call this function - RLoader:Load("example_folder", "LUA", function(f) include(f) end
 
-API:
+# Documentation
 
 All functions are located inside lua/rlib/
 
