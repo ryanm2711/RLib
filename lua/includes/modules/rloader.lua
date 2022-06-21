@@ -11,7 +11,25 @@ local function log(...)
         str = str .. tostring(v) .. " "
     end
 
-    MsgC(Color(108, 51, 240), "[RLoader]", color_white, str .. "\n")
+    MsgC(Color(0, 0, 255), "[RLoader]", color_white, str .. "\n")
+end
+
+local function logGreen(...)
+    local str = ""
+    for k, v in pairs({...}) do
+        str = str .. tostring(v) .. " "
+    end
+
+    MsgC(Color(0, 0, 255), "[RLoader]", Color(91, 214, 91), str .. "\n")
+end
+
+local function logRed(...)
+    local str = ""
+    for k, v in pairs({...}) do
+        str = str .. tostring(v) .. " "
+    end
+
+    MsgC(Color(0, 0, 255), "[RLoader]", Color(167, 94, 94), str .. "\n")
 end
 
 local files = {}
@@ -52,45 +70,43 @@ local allowedExtensions = {
     [".ogg"] = function(f) table.insert(files.resources, f) end
 }
 
-local function processFile(dir, f, extension)
-    --log(extension)
-
-    if extension == ".lua" then -- Need to do this so we can actually load to the seperate realms
-        local realm = f:sub(1, 2)
-        f = dir .. "/" .. f
-        allowedExtensions[extension](f, realm)
+local function ProcessFile(dir, File, extension)
+    local fileDir = dir .. "/" .. File -- Actual directory of file
+    
+    if extension == ".lua" then
+        local realm = File:sub(1, 2)
+        allowedExtensions[extension](fileDir, realm)
     else
-        f = dir .. "/" .. f
-        allowedExtensions[extension](f)
+        allowedExtensions[extension](fileDir)
     end
+
+    logRed("Processing", fileDir)
 end
 
-local function searchDir(dir, basePath, excludedFiles)
+local function SearchDir(dir, basePath)
     local files, dirs = file.Find(dir .. "/*", basePath)
-    log("Processing", dir)
+    //log("Processing", dir)
 
-    for _, f in ipairs(files) do
+    for _, File in ipairs(files) do
         for extension, _ in pairs(allowedExtensions) do
-            if f:match(".*%" .. extension) then
-                if excludedFiles ~= nil and not table.HasValue(excludedFiles, f) then
-                    processFile(dir, f, extension)
-                end
-                break
-            end
+            if not File:match(".*%" .. extension) then continue end
+
+            ProcessFile(dir, File, extension)
+            break
         end
     end
 
-    for _, d in ipairs(dirs) do -- Process sub folders
-        searchDir(dir .. "/" .. d, basePath) 
+    for _, directory in ipairs(dirs) do
+        SearchDir(dir .. "/" .. directory, basePath)
     end
 end
 
-function RLoader:Load(dir, basePath, _include, excludedFiles)
-    excludedFiles = excludedFiles or nil
-
-    log("Loading directory", dir)
+function RLoader:Load(dir, basePath, _include)
+    local startingTimestamp = os.time()
+    log("Loading directory", "from the", basePath, "base path:", dir)
+    
     resetLoadTable()
-    searchDir(dir, basePath, excludedFiles)
+    SearchDir(dir, basePath)
 
     for k, v in ipairs(files.sh) do
         AddCSLuaFile(v)
@@ -114,6 +130,11 @@ function RLoader:Load(dir, basePath, _include, excludedFiles)
             AddCSLuaFile(v)
         end
     end
+
+    local finishedTimestamp = os.time()
+    local loadFilesTime = finishedTimestamp - startingTimestamp
+
+    logGreen("Finished loading files in " .. loadFilesTime .. " seconds")
 
     print("\n")
 end
