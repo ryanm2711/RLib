@@ -1,8 +1,8 @@
-function RLib:Log(tag, tagColor, ...)
+function RLib:Log(tag, tagColor, msgColor, ...)
     local str = ""
     for k, v in pairs(...) do
         str = str .. tostring(v) .. " "
     end
 
-    MsgC(tagColor, tag, color_white, str .. "\n")
+    MsgC(tagColor, tag, msgColor, str .. "\n")
 end
